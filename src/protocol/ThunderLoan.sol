@@ -137,12 +137,17 @@ contract ThunderLoan is Initializable, OwnableUpgradeable, UUPSUpgradeable, Orac
     /*//////////////////////////////////////////////////////////////
                            EXTERNAL FUNCTIONS
     //////////////////////////////////////////////////////////////*/
+    // @audit info change name to poolFactory
+    // q: what happens if we deploy the contract, and someone else initializes it??
+    // a: that would be suckm they could pick a different tswap address
+    // @audit low - initializers can be front run
     function initialize(address tswapAddress) external initializer {
         __Ownable_init(msg.sender);
         __UUPSUpgradeable_init();
         __Oracle_init(tswapAddress);
-        s_feePrecision = 1e18;
-        s_flashLoanFee = 3e15; // 0.3% ETH fee
+        s_feePrecision = 1e18; // @audit-info constant should be defined instead of literals value
+        // @audit-info constant should be defined instead of literals value
+        s_flashLoanFee = 3e15; // 0.3% ETH fee 
     }
 
     function deposit(IERC20 token, uint256 amount) external revertIfZero(amount) revertIfNotAllowedToken(token) {
@@ -200,16 +205,21 @@ contract ThunderLoan is Initializable, OwnableUpgradeable, UUPSUpgradeable, Orac
         }
 
         uint256 fee = getCalculatedFee(token, amount);
+        // @audit-info messed up the slither disables
         // slither-disable-next-line reentrancy-vulnerabilities-2 reentrancy-vulnerabilities-3
+        // @follow-up
         assetToken.updateExchangeRate(fee);
 
         emit FlashLoan(receiverAddress, token, amount, fee, params);
 
         s_currentlyFlashLoaning[token] = true;
+        // @follow-up
         assetToken.transferUnderlyingTo(receiverAddress, amount);
         // slither-disable-next-line unused-return reentrancy-vulnerabilities-2
+        // @follow-up reentrancy
+        // @follow-up do we need the return value of functionCall ??
         receiverAddress.functionCall(
-            abi.encodeCall(
+            abi.encodeCall( 
                 IFlashLoanReceiver.executeOperation,
                 (
                     address(token),
@@ -228,6 +238,7 @@ contract ThunderLoan is Initializable, OwnableUpgradeable, UUPSUpgradeable, Orac
         s_currentlyFlashLoaning[token] = false;
     }
 
+    // @audit-info this function should be marked as external if not used internally 
     function repay(IERC20 token, uint256 amount) public {
         if (!s_currentlyFlashLoaning[token]) {
             revert ThunderLoan__NotCurrentlyFlashLoaning();
@@ -266,6 +277,7 @@ contract ThunderLoan is Initializable, OwnableUpgradeable, UUPSUpgradeable, Orac
         if (newFee > s_feePrecision) {
             revert ThunderLoan__BadNewFee();
         }
+        // @audit-low must emit an event
         s_flashLoanFee = newFee;
     }
 
@@ -273,10 +285,12 @@ contract ThunderLoan is Initializable, OwnableUpgradeable, UUPSUpgradeable, Orac
         return address(s_tokenToAssetToken[token]) != address(0);
     }
 
+    // @audit-info this function should be marked as external if not used internally 
     function getAssetFromToken(IERC20 token) public view returns (AssetToken) {
         return s_tokenToAssetToken[token];
     }
 
+    // @audit-info this function should be marked as external if not used internally 
     function isCurrentlyFlashLoaning(IERC20 token) public view returns (bool) {
         return s_currentlyFlashLoaning[token];
     }
