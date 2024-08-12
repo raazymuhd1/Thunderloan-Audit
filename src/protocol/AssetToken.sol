@@ -21,6 +21,8 @@ contract AssetToken is ERC20 {
     // The underlying per asset exchange rate
     // ie: s_exchangeRate = 2
     // means 1 asset token is worth 2 underlying tokens
+    // Underlying == USDC (assets being used when borrowing)
+    // AssetToken == shares Of The Pool (liq provider would get this assetsToken in return when depositing Underlying Assets into liq pool)
     uint256 private s_exchangeRate;
     uint256 public constant EXCHANGE_RATE_PRECISION = 1e18;
     uint256 private constant STARTING_EXCHANGE_RATE = 1e18;
@@ -52,7 +54,8 @@ contract AssetToken is ERC20 {
     //////////////////////////////////////////////////////////////*/
     constructor(
         address thunderLoan,
-        IERC20 underlying,
+        IERC20 underlying, // the token being deposited for flashloans (token use for borrowing)
+        // q: are the ERC20s stored in AssetToken.sol instead of Thunderloan.sol ??
         string memory assetName,
         string memory assetSymbol
     )
@@ -65,6 +68,7 @@ contract AssetToken is ERC20 {
         s_exchangeRate = STARTING_EXCHANGE_RATE;
     }
 
+    // q: is there a way where Thunderloan can mint, when it shouldn't ??
     function mint(address to, uint256 amount) external onlyThunderLoan {
         _mint(to, amount);
     }
@@ -73,6 +77,10 @@ contract AssetToken is ERC20 {
         _burn(account, amount);
     }
 
+    // weird ERC20s ??
+    // q: what happens if USDC blacklists the thunderloan contract ??
+    // q: what happens if USDC blacklists the asset token contract??
+    // @follow-up, weird ERC20s with USDC
     function transferUnderlyingTo(address to, uint256 amount) external onlyThunderLoan {
         i_underlying.safeTransfer(to, amount);
     }
@@ -86,6 +94,8 @@ contract AssetToken is ERC20 {
         // newExchangeRate = oldExchangeRate * (totalSupply + fee) / totalSupply
         // newExchangeRate = 1 (4 + 0.5) / 4
         // newExchangeRate = 1.125
+        // @audit-info - too many reading from storage variables, its better to turn it into memory variables
+        // what if totalSupply is 0 ??
         uint256 newExchangeRate = s_exchangeRate * (totalSupply() + fee) / totalSupply();
 
         if (newExchangeRate <= s_exchangeRate) {
