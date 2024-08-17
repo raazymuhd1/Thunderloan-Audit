@@ -158,8 +158,8 @@ contract ThunderLoan is Initializable, OwnableUpgradeable, UUPSUpgradeable, Orac
         emit Deposit(msg.sender, token, amount);
         assetToken.mint(msg.sender, mintAmount);
 
-        // @audit follow-up, this seems sus
-        // q: why are we calculating the fees of flash loans in the deposit??
+        // @audit-high - we shouldn't be updating fee on the deposits function,
+        // because this function is not accruing any fees
         uint256 calculatedFee = getCalculatedFee(token, amount);
         assetToken.updateExchangeRate(calculatedFee);
         // underlying token sits on the AssetToken contract, means underlying token being stored in the AssetToken contract
