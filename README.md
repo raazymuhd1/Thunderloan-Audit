@@ -1,4 +1,4 @@
-# Thunder Loan ( Video stop at 16.28.26)
+# Thunder Loan ( Video stop at 17.58.16)
 
 <br/>
 <p align="center">
@@ -12,7 +12,7 @@
 You can learn more about how [Aave works](https://www.youtube.com/watch?v=dTCwssZ116A) at a high level from [this video](https://www.youtube.com/watch?v=dTCwssZ116A).
 
 
-- [Thunder Loan ( Video stop at 16.28.26)](#thunder-loan--video-stop-at-162826)
+- [Thunder Loan ( Video stop at 17.58.16)](#thunder-loan--video-stop-at-175816)
 - [About](#about)
 - [Getting Started](#getting-started)
   - [Requirements](#requirements)
